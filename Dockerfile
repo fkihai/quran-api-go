@@ -15,6 +15,7 @@ WORKDIR /app
 COPY --from=builder /bin/api /app/api
 COPY migrations /app/migrations
 COPY data /app/data
+COPY docs /app/docs
 
 ENV DB_PATH=./data/quran.db \
 	SERVER_HOST=0.0.0.0 \

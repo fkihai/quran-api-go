@@ -3,7 +3,9 @@ package handler
 import (
 	"embed"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +44,31 @@ func (h *DocsHandler) ServeDocs(c *gin.Context) {
 func (h *DocsHandler) ServeOpenAPI(c *gin.Context) {
 	c.Header("Content-Type", "text/yaml; charset=utf-8")
 	c.Header("Access-Control-Allow-Origin", "*")
-	c.File("./docs/openapi.yaml")
+	c.Header("Cache-Control", "no-store")
+
+	// Read the static openapi.yaml
+	content, err := os.ReadFile("./docs/openapi.yaml")
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	// Determine the correct scheme and host from the request (handles proxies)
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	} else if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	}
+
+	host := c.GetHeader("X-Forwarded-Host")
+	if host == "" {
+		host = c.Request.Host
+	}
+
+	productionURL := scheme + "://" + host
+	yaml := strings.ReplaceAll(string(content), "http://localhost:8080", productionURL)
+	c.String(http.StatusOK, yaml)
 }
 
 // ServeStatic serves embedded static files (Scalar JS)

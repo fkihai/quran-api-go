@@ -1,0 +1,28 @@
+# Quran API Go - Log Rotation Configuration
+# ==========================================
+
+/var/log/quran-api/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 quran-api quran-api
+    sharedscripts
+    postrotate
+        # Reload journald to pick up new log files
+        systemctl reload quran-api 2>/dev/null || true
+    endscript
+}
+
+/opt/quran-api/logs/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 quran-api quran-api
+    sharedscripts
+}

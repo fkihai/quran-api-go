@@ -1,0 +1,78 @@
+# Quran API Go - Production Docker Compose
+# =========================================
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This production override adds:
+# - Resource limits
+# - Restart policy
+# - Logging configuration
+# - Health check
+# - Non-root user (optional)
+
+services:
+  api:
+    # Restart policy
+    restart: unless-stopped
+
+    # Production environment
+    env_file:
+      - .env.production
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    # Logging - JSON format for log aggregation
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        compress: "true"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Security - run as non-root
+    # uncomment if you create a quran-api user in the container
+    # user: "1000:1000"
+
+    # Read-only filesystem (except for data volume)
+    read_only: true
+    tmpfs:
+      - /tmp:size=10m
+
+    # Cap DROP all capabilities
+    cap_drop:
+      - ALL
+
+    # Add only needed capabilities
+    cap_add:
+      - NET_BIND_SERVICE
+
+    # Network mode
+    networks:
+      - quran-network
+
+    # Volume for data persistence
+    volumes:
+      - quran-data:/app/data
+
+networks:
+  quran-network:
+    driver: bridge
+
+volumes:
+  quran-data:
+    driver: local

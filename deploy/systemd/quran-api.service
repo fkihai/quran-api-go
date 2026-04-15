@@ -1,0 +1,39 @@
+[Unit]
+Description=Quran API Go - Lightweight RESTful API untuk Data Al-Quran
+Documentation=https://github.com/Yayasan-Digital-Islami-Indonesia/quran-api-go
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=quran-api
+Group=quran-api
+WorkingDirectory=/opt/quran-api
+
+# Environment file
+EnvironmentFile=/opt/quran-api/.env
+
+# Binary location
+ExecStart=/opt/quran-api/quran-api
+
+# Restart policy - always restart unless stopped explicitly
+Restart=always
+RestartSec=5s
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/quran-api
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=quran-api
+
+# Graceful shutdown timeout
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
